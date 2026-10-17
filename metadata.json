@@ -1,0 +1,10 @@
+{
+  "name": "Remix Zoya. 55 - AI Voice Assistant",
+  "description": "A sassy, witty, and intelligent Indian female AI voice assistant. Created and owned by ASLAM.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
