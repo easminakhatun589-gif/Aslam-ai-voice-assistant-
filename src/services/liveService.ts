@@ -85,7 +85,7 @@ export class LiveSessionManager {
 
   constructor(private config: AppConfig) {
     const key = config.apiKey || (typeof process !== "undefined" && process.env?.GEMINI_API_KEY ? process.env.GEMINI_API_KEY : "");
-    this.ai = new GoogleGenAI({ apiKey: key });
+    this.ai = new GoogleGenAI({ apiKey: key, httpOptions: { apiVersion: "v1alpha" } });
     this.boundVisibilityHandler = this.handleVisibilityChange.bind(this);
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this.boundVisibilityHandler);
@@ -298,7 +298,7 @@ CRITICAL INSTRUCTIONS FOR THIS FOCUS:
     const voiceToUse = this.config.voiceName?.trim() || "Kore";
 
     const connectConfig = {
-      model: "gemini-3.8-live",
+      model: "gemini-2.0-flash-exp",
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
@@ -423,7 +423,7 @@ CRITICAL INSTRUCTIONS FOR THIS FOCUS:
     } catch (err) {
       console.warn("Primary live model connect failed, retrying with fallback model:", err);
       // Fallback model if primary model is unavailable
-      connectConfig.model = "gemini-3.1-flash-live-preview";
+      connectConfig.model = "gemini-2.0-flash-realtime-exp";
       try {
         this.activeSession = await this.ai.live.connect(connectConfig);
       } catch (fallbackErr) {
@@ -438,22 +438,37 @@ CRITICAL INSTRUCTIONS FOR THIS FOCUS:
     }
   }
 
+  private reconnectAttempts = 0;
+
   private scheduleReconnect() {
     if (this.isExplicitlyStopped) return;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
 
+    if (this.reconnectAttempts >= 3) {
+      console.warn("Max Live API reconnect attempts reached. Gracefully switching to idle.");
+      this.reconnectAttempts = 0;
+      this.stop();
+      this.onStateChange("idle");
+      this.onMessage(
+        "zoya",
+        "Live Audio Stream service is currently unavailable in your network area. You can type or send text commands for instant voice audio replies!"
+      );
+      return;
+    }
+
+    this.reconnectAttempts++;
     this.onStateChange("reconnecting");
-    console.log("Attempting smooth auto-reconnect to Live API in 1.2s...");
+    console.log(`Attempting smooth auto-reconnect (${this.reconnectAttempts}/3) to Live API in 1.5s...`);
 
     this.reconnectTimer = setTimeout(async () => {
       if (this.isExplicitlyStopped) return;
       try {
         await this.connectLiveSession();
       } catch (e) {
-        console.error("Auto-reconnect attempt failed, scheduling next retry...", e);
+        console.error("Auto-reconnect attempt failed:", e);
         this.scheduleReconnect();
       }
-    }, 1200);
+    }, 1500);
   }
 
   private playAudioChunk(base64Data: string) {

@@ -84,6 +84,7 @@ CRITICAL INSTRUCTIONS FOR THIS FOCUS:
         model: "gemini-3.8-flash",
         config: {
           systemInstruction: baseInstruction + modeContext + strictContext + topicContext,
+          tools: [{ googleSearch: {} }],
         },
         history: formattedHistory,
       });

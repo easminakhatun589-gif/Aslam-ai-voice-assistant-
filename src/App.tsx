@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   Mic, MicOff, Loader2, Volume2, VolumeX, Keyboard, Send, Trash2, Video, 
   Image as ImageIcon, Settings, MoreVertical, Edit3, Key, Download, ScrollText, 
-  RefreshCw, MessageSquare, Sparkles, Palette, Crown, Heart, Users, Flame 
+  RefreshCw, MessageSquare, Sparkles, Palette, Crown, Heart, Users, Flame, Gamepad2 
 } from "lucide-react";
 import { getZoyaResponse, getZoyaAudio, resetZoyaSession } from "./services/geminiService";
 import { usePWAInstall } from "./hooks/usePWAInstall";
@@ -16,6 +16,7 @@ import TopicScriptModal from "./components/TopicScriptModal";
 import VoiceSelectorModal from "./components/VoiceSelectorModal";
 import ChatHistoryModal from "./components/ChatHistoryModal";
 import ChatGPTChatModal from "./components/ChatGPTChatModal";
+import VoiceAppsLauncherModal from "./components/VoiceAppsLauncherModal";
 import { playPCM } from "./utils/audioUtils";
 import { motion, AnimatePresence } from "motion/react";
 import { AppConfig, AppState } from "./types";
@@ -179,6 +180,7 @@ export default function App() {
 
   const [showTopicModal, setShowTopicModal] = useState(false);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [showVoiceAppsModal, setShowVoiceAppsModal] = useState(false);
   const [updatingPWA, setUpdatingPWA] = useState(false);
 
   const handleConfigComplete = (newConfig: AppConfig) => {
@@ -529,6 +531,16 @@ export default function App() {
         </div>
         
         <div className="flex items-center gap-2">
+          {/* Games, Apps & Web Voice Commands Hub */}
+          <button
+            onClick={() => setShowVoiceAppsModal(true)}
+            className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white transition-all active:scale-95 flex items-center gap-1.5"
+            title="Games, Apps & Web Voice Hub"
+          >
+            <Gamepad2 size={18} className="text-pink-400" />
+            <span className="text-xs hidden sm:inline font-medium">Voice Hub</span>
+          </button>
+
           {/* Quick Theme & Mode Selector Trigger */}
           <button
             onClick={() => setShowThemeModeModal(true)}
@@ -981,6 +993,14 @@ export default function App() {
           onClose={() => setShowVoiceModal(false)}
         />
       )}
+
+      {/* Voice Commands Hub Modal */}
+      <VoiceAppsLauncherModal
+        isOpen={showVoiceAppsModal}
+        onClose={() => setShowVoiceAppsModal(false)}
+        onExecuteCommand={(cmd) => handleTextCommand(cmd)}
+        userName={config?.userName || "ASLAM"}
+      />
 
       {/* Real ChatGPT Style Chatbox Modal */}
       <ChatGPTChatModal
